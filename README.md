@@ -12,29 +12,32 @@ python app.py
 
 ## Eseguibile Windows `.exe`
 
-### Download (consigliato)
+Si, puoi distribuire l'app come file `.exe` standalone, senza richiedere
+un'installazione di Python sul PC finale.
 
-Ogni push su `main` pubblica automaticamente il file `DateConverter.exe` come
-artefatto della GitHub Action **Build standalone Windows .exe**.
+In questo repository e presente un workflow GitHub Actions che genera il file
+eseguibile su Windows usando PyInstaller. Questo e il modo piu semplice se stai
+lavorando da Linux.
 
-Per scaricarlo:
-1. Vai su **Actions** → **Build standalone Windows .exe** → ultima esecuzione riuscita
-2. Nella sezione **Artifacts** scarica `DateConverter-windows`
-3. Estrai lo zip ed esegui `DateConverter.exe` — nessuna installazione richiesta
+### Come generarlo
 
-Quando viene creato un tag `vX.Y.Z` il file viene allegato automaticamente anche
-alla pagina **Releases**.
+1. Pubblica le modifiche su GitHub.
+2. Apri la scheda `Actions` del repository.
+3. Avvia il workflow `Build Windows EXE`.
+4. Al termine scarica l'artefatto `python-mini-app-windows-exe`.
 
-### Build locale
+L'archivio contiene `app.exe`, che puo essere eseguito senza installare Python.
 
-Requisiti: Python 3.10+ e PyInstaller installato.
+### Build locale su Windows
+
+Se vuoi creare l'eseguibile in locale, esegui questi comandi su Windows:
 
 ```bash
-pip install pyinstaller==6.13.0
-pyinstaller DateConverter.spec
+py -m pip install pyinstaller
+py -m PyInstaller --noconfirm --clean --onefile --windowed --name app app.py
 ```
 
-L'eseguibile viene generato in `dist/DateConverter.exe`.
+Il file finale verra creato nella cartella `dist`.
 
 ## Funzioni principali
 
