@@ -5,7 +5,11 @@ import unittest
 import zipfile
 from pathlib import Path
 
-from converter import convert_date_string, convert_files_to_excel
+from converter import (
+    convert_date_string,
+    convert_files_to_excel,
+    ensure_unique_sheet_names,
+)
 
 
 class ConverterTests(unittest.TestCase):
@@ -43,6 +47,10 @@ class ConverterTests(unittest.TestCase):
 
             self.assertIn("01/07/2026 23:00:00", sheet1)
             self.assertIn("31/12/2026 01:02:03", sheet2)
+
+    def test_ensure_unique_sheet_names_handles_case_insensitive_collisions(self) -> None:
+        names = ensure_unique_sheet_names(["Report", "report", "REPORT"])
+        self.assertEqual(names, ["Report", "report_1", "REPORT_2"])
 
 
 if __name__ == "__main__":
