@@ -44,22 +44,22 @@ jobs:
           Copy-Item converter.py "$portableDir/converter.py"
           Copy-Item README.md "$portableDir/README.md"
 
-          @"
-@echo off
-setlocal
-cd /d %~dp0
-start "" pythonw.exe app.py
-"@ | Set-Content -Encoding ASCII "$portableDir/start_gui.bat"
+          @(
+            "@echo off",
+            "setlocal",
+            "cd /d %~dp0",
+            "start \"\" pythonw.exe app.py"
+          ) | Set-Content -Encoding ASCII "$portableDir/start_gui.bat"
 
-          @"
-@echo off
-setlocal
-cd /d %~dp0
-python.exe app.py --help
-echo.
-echo Esempio:
-echo python.exe app.py --input file1.csv file2.txt --output risultato.xlsx
-"@ | Set-Content -Encoding ASCII "$portableDir/start_cli.bat"
+          @(
+            "@echo off",
+            "setlocal",
+            "cd /d %~dp0",
+            "python.exe app.py --help",
+            "echo.",
+            "echo Esempio:",
+            "echo python.exe app.py --input file1.csv file2.txt --output risultato.xlsx"
+          ) | Set-Content -Encoding ASCII "$portableDir/start_cli.bat"
 
       - name: Create portable zip
         working-directory: source
