@@ -15,8 +15,9 @@ python app.py
 Si, puoi distribuire l'app senza installazione.
 
 In questo repository e presente un workflow GitHub Actions che genera una build
-portable Windows usando Nuitka in modalita standalone (cartella con exe + runtime).
-Questa modalita e in genere meno soggetta a falsi positivi rispetto a PyInstaller onefile.
+portable Windows usando Python embeddable ufficiale (python.org) + script dell'app.
+Questa modalita evita exe compilati dal progetto ed e in genere meno soggetta a falsi
+positivi rispetto a PyInstaller/Nuitka.
 
 ### Come generarlo
 
@@ -25,18 +26,29 @@ Questa modalita e in genere meno soggetta a falsi positivi rispetto a PyInstalle
 3. Avvia il workflow `Build Windows Portable App`.
 4. Al termine scarica l'artefatto `python-mini-app-windows-portable`.
 
-L'archivio contiene la cartella `app.dist`: estraila e avvia `app.exe`.
+L'archivio contiene la cartella `portable-app`: estraila e avvia:
+
+- `start_gui.bat` per la GUI
+- `start_cli.bat` per l'uso da terminale
 
 ### Build locale su Windows
 
-Se vuoi creare la build portable in locale su Windows, esegui questi comandi:
+Se vuoi creare la build portable in locale su Windows, scarica il pacchetto
+embeddable ufficiale di Python 3.12 x64 e copia nella stessa cartella:
+
+- `app.py`
+- `converter.py`
+- un file batch launcher (come `start_gui.bat`)
+
+Esempio launcher GUI:
 
 ```bash
-py -m pip install --upgrade nuitka ordered-set zstandard
-py -m nuitka app.py --standalone --enable-plugin=tk-inter --windows-console-mode=disable --assume-yes-for-downloads --output-filename=app.exe
+@echo off
+cd /d %~dp0
+start "" pythonw.exe app.py
 ```
 
-La build finale verra creata in `app.dist`.
+Distribuisci la cartella completa in uno zip.
 
 ## Funzioni principali
 

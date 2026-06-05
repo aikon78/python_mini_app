@@ -22,26 +22,49 @@ jobs:
 
       - name: Install build dependency
         working-directory: source
-        run: python -m pip install --upgrade pip nuitka ordered-set zstandard
+        run: python -m pip install --upgrade pip
 
       - name: Run tests
         working-directory: source
         run: python -m unittest discover -s tests -p "test_*.py" -v
 
-      - name: Build portable app folder
+      - name: Create portable bundle with embeddable Python
         working-directory: source
-        run: >
-          python -m nuitka app.py
-          --standalone
-          --enable-plugin=tk-inter
-          --windows-console-mode=disable
-          --assume-yes-for-downloads
-          --output-filename=app.exe
+        shell: pwsh
+        run: |
+          $embedUrl = "https://www.python.org/ftp/python/3.12.10/python-3.12.10-embed-amd64.zip"
+          $embedZip = "python-embed.zip"
+          $portableDir = "portable-app"
+
+          Invoke-WebRequest -Uri $embedUrl -OutFile $embedZip
+          New-Item -ItemType Directory -Path $portableDir | Out-Null
+          Expand-Archive -Path $embedZip -DestinationPath $portableDir -Force
+
+          Copy-Item app.py "$portableDir/app.py"
+          Copy-Item converter.py "$portableDir/converter.py"
+          Copy-Item README.md "$portableDir/README.md"
+
+          @"
+@echo off
+setlocal
+cd /d %~dp0
+start "" pythonw.exe app.py
+"@ | Set-Content -Encoding ASCII "$portableDir/start_gui.bat"
+
+          @"
+@echo off
+setlocal
+cd /d %~dp0
+python.exe app.py --help
+echo.
+echo Esempio:
+echo python.exe app.py --input file1.csv file2.txt --output risultato.xlsx
+"@ | Set-Content -Encoding ASCII "$portableDir/start_cli.bat"
 
       - name: Create portable zip
         working-directory: source
         shell: pwsh
-        run: Compress-Archive -Path app.dist -DestinationPath python-mini-app-windows-portable.zip -Force
+        run: Compress-Archive -Path portable-app -DestinationPath python-mini-app-windows-portable.zip -Force
 
       - name: Upload portable artifact
         uses: actions/upload-artifact@v4
