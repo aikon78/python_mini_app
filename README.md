@@ -31,6 +31,9 @@ L'archivio contiene la cartella `portable-app`: estraila e avvia:
 - `start_gui.bat` per la GUI
 - `start_cli.bat` per l'uso da terminale
 
+Nota: `start_gui.bat` avvia la GUI e, se c'e un errore, mantiene aperta la finestra
+cosi puoi leggere il messaggio invece della chiusura immediata.
+
 ### Build locale su Windows
 
 Se vuoi creare la build portable in locale su Windows, scarica il pacchetto
