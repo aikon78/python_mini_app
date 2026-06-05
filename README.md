@@ -10,6 +10,19 @@ un file Excel `.xlsx`.
 python app.py
 ```
 
+## Uso da CLI
+
+Puoi usare lo stesso entrypoint anche da terminale, senza GUI:
+
+```bash
+python app.py --input file1.csv file2.txt --output risultato.xlsx
+```
+
+Argomenti:
+
+- `--input`: uno o piu file `.txt` o `.csv`
+- `--output`: file `.xlsx` finale da generare
+
 ## Eseguibile Windows `.exe`
 
 Si, puoi distribuire l'app come file `.exe` standalone, senza richiedere

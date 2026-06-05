@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+import argparse
 from pathlib import Path
+import sys
 import tkinter as tk
 from tkinter import filedialog, messagebox
 
@@ -54,6 +56,15 @@ class DateConverterApp:
         self.status_label = tk.Label(frame, text="", fg="green", anchor="w")
         self.status_label.pack(fill="x", pady=(8, 0))
 
+    def _default_output_file(self) -> Path | None:
+        if self.output_file is not None:
+            return self.output_file
+        if not self.selected_files:
+            return None
+        return self.selected_files[0].with_name(
+            f"{self.selected_files[0].stem}_convertito.xlsx"
+        )
+
     def add_files(self) -> None:
         paths = filedialog.askopenfilenames(
             title="Seleziona file TXT o CSV",
@@ -65,10 +76,8 @@ class DateConverterApp:
                 self.selected_files.append(path)
                 self.file_listbox.insert(tk.END, str(path))
 
-        if self.selected_files and self.output_file is None:
-            default_output = self.selected_files[0].with_name(
-                f"{self.selected_files[0].stem}_convertito.xlsx"
-            )
+        default_output = self._default_output_file()
+        if default_output is not None and self.output_file is None:
             self.output_file = default_output
             self.output_label.configure(text=f"Output: {self.output_file}")
 
@@ -78,40 +87,105 @@ class DateConverterApp:
             self.file_listbox.delete(index)
             del self.selected_files[index]
 
-    def choose_output(self) -> None:
+        if not self.selected_files:
+            self.output_file = None
+            self.output_label.configure(text="Output: non selezionato")
+            self.status_label.configure(text="")
+
+    def choose_output(self) -> Path | None:
+        default_output = self._default_output_file()
+        dialog_options = {
+            "title": "Salva file Excel",
+            "defaultextension": ".xlsx",
+            "filetypes": [("Excel Workbook", "*.xlsx")],
+        }
+        if default_output is not None:
+            dialog_options["initialdir"] = str(default_output.parent)
+            dialog_options["initialfile"] = default_output.name
+
         selected = filedialog.asksaveasfilename(
-            title="Salva file Excel",
-            defaultextension=".xlsx",
-            filetypes=[("Excel Workbook", "*.xlsx")],
+            **dialog_options,
         )
-        if selected:
-            self.output_file = Path(selected)
-            self.output_label.configure(text=f"Output: {self.output_file}")
+        if not selected:
+            return None
+
+        self.output_file = Path(selected)
+        self.output_label.configure(text=f"Output: {self.output_file}")
+        return self.output_file
 
     def convert(self) -> None:
         if not self.selected_files:
             messagebox.showwarning("Attenzione", "Seleziona almeno un file TXT o CSV.")
             return
-        if self.output_file is None:
-            messagebox.showwarning("Attenzione", "Scegli il file di output Excel.")
+
+        output_file = self.choose_output()
+        if output_file is None:
+            self.status_label.configure(text="Conversione annullata.", fg="red")
             return
 
         try:
-            convert_files_to_excel(self.selected_files, self.output_file)
+            convert_files_to_excel(self.selected_files, output_file)
         except Exception as exc:  # noqa: BLE001 - GUI surface for conversion errors
             messagebox.showerror("Errore", f"Conversione fallita: {exc}")
             self.status_label.configure(text="", fg="red")
             return
 
-        self.status_label.configure(text=f"File creato: {self.output_file}", fg="green")
-        messagebox.showinfo("Completato", f"Conversione terminata.\n{self.output_file}")
+        self.status_label.configure(text=f"File creato: {output_file}", fg="green")
+        messagebox.showinfo("Completato", f"Conversione terminata.\n{output_file}")
 
 
-def main() -> None:
+def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
+    parser = argparse.ArgumentParser(
+        description="Converte file TXT/CSV con date USA in un file Excel .xlsx.",
+    )
+    parser.add_argument(
+        "--input",
+        nargs="+",
+        type=Path,
+        help="Uno o piu file TXT/CSV da convertire.",
+    )
+    parser.add_argument(
+        "--output",
+        type=Path,
+        help="Percorso del file Excel .xlsx da generare.",
+    )
+
+    args = parser.parse_args(argv)
+    has_cli_args = args.input is not None or args.output is not None
+    if has_cli_args:
+        if not args.input:
+            parser.error("--input e obbligatorio quando usi la modalita CLI.")
+        if args.output is None:
+            parser.error("--output e obbligatorio quando usi la modalita CLI.")
+
+    return args
+
+
+def run_cli(input_files: list[Path], output_file: Path) -> int:
+    try:
+        convert_files_to_excel(input_files, output_file)
+    except Exception as exc:  # noqa: BLE001 - CLI surface for conversion errors
+        print(f"Conversione fallita: {exc}", file=sys.stderr)
+        return 1
+
+    print(f"File creato: {output_file}")
+    return 0
+
+
+def launch_gui() -> int:
     root = tk.Tk()
-    app = DateConverterApp(root)
+    DateConverterApp(root)
     root.mainloop()
+    return 0
+
+
+def main(argv: list[str] | None = None) -> int:
+    args = parse_args(argv)
+    if args.input is not None:
+        return run_cli(args.input, args.output)
+
+    return launch_gui()
 
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(main())
