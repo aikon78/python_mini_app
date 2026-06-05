@@ -1,4 +1,4 @@
-name: Build Windows EXE
+name: Build Windows Portable App
 
 on:
   workflow_dispatch:
@@ -28,12 +28,17 @@ jobs:
         working-directory: source
         run: python -m unittest discover -s tests -p "test_*.py" -v
 
-      - name: Build standalone executable
+      - name: Build portable app folder
         working-directory: source
-        run: python -m PyInstaller --noconfirm --clean --onefile --windowed --name app app.py
+        run: python -m PyInstaller --noconfirm --clean --windowed --name app app.py
 
-      - name: Upload executable artifact
+      - name: Create portable zip
+        working-directory: source/dist
+        shell: pwsh
+        run: Compress-Archive -Path app -DestinationPath python-mini-app-portable.zip -Force
+
+      - name: Upload portable artifact
         uses: actions/upload-artifact@v4
         with:
-          name: python-mini-app-windows-exe
-          path: source/dist/app.exe
+          name: python-mini-app-windows-portable
+          path: source/dist/python-mini-app-portable.zip

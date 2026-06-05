@@ -25,16 +25,30 @@ Argomenti:
 - `--input`: uno o piu file `.txt` o `.csv`
 - `--output`: file `.xlsx` finale da generare
 
-## Eseguibile console Windows
+## App portable Windows
 
-Se vuoi creare un eseguibile console su Windows, usa PyInstaller senza modalita windowed:
+Se vuoi ridurre i falsi positivi dell'antivirus su Windows, evita la modalita `--onefile`.
+PyInstaller in modalita cartella (`onedir`) viene in genere segnalato meno spesso.
+
+Questa modalita resta portable: non richiede installazione. Devi distribuire l'intera cartella
+oppure uno `.zip` che la contiene, non il solo `app.exe`.
+
+Per la GUI, crea il pacchetto Windows cosi:
 
 ```bash
 py -m pip install pyinstaller
-py -m PyInstaller --noconfirm --clean --onefile --name app app.py
+py -m PyInstaller --noconfirm --clean --windowed --name app app.py
 ```
 
-Il file finale verra creato nella cartella `dist`.
+Se invece ti serve una build console, usa:
+
+```bash
+py -m pip install pyinstaller
+py -m PyInstaller --noconfirm --clean --name app app.py
+```
+
+L'output finale verra creato nella cartella `dist/app` con `app.exe` e i file necessari accanto.
+Per distribuirlo come app portable, comprimi tutta la cartella e condividi lo zip.
 
 ## Funzioni principali
 
