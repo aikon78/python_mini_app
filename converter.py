@@ -50,13 +50,11 @@ def sanitize_sheet_name(name: str, fallback_index: int) -> str:
 
 def ensure_unique_sheet_names(names: Iterable[str]) -> list[str]:
     result: list[str] = []
-    # Excel sheet names are case-insensitive: "Data" and "data" collide.
     used: set[str] = set()
     for index, base_name in enumerate(names, start=1):
         name = sanitize_sheet_name(base_name, index)
-        key = name.casefold()
-        if key not in used:
-            used.add(key)
+        if name not in used:
+            used.add(name)
             result.append(name)
             continue
 
@@ -64,9 +62,8 @@ def ensure_unique_sheet_names(names: Iterable[str]) -> list[str]:
         while True:
             suffix = f"_{counter}"
             candidate = f"{name[: 31 - len(suffix)]}{suffix}"
-            candidate_key = candidate.casefold()
-            if candidate_key not in used:
-                used.add(candidate_key)
+            if candidate not in used:
+                used.add(candidate)
                 result.append(candidate)
                 break
             counter += 1
