@@ -103,9 +103,7 @@ class DateConverterApp:
             dialog_options["initialdir"] = str(default_output.parent)
             dialog_options["initialfile"] = default_output.name
 
-        selected = filedialog.asksaveasfilename(
-            **dialog_options,
-        )
+        selected = filedialog.asksaveasfilename(**dialog_options)
         if not selected:
             return None
 

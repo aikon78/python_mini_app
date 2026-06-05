@@ -47,6 +47,16 @@ class AppTests(unittest.TestCase):
             self.assertTrue(output_file.exists())
             self.assertIn(str(output_file), stdout.getvalue())
 
+    def test_main_cli_returns_error_code_for_missing_input_file(self) -> None:
+        stderr = io.StringIO()
+        with contextlib.redirect_stderr(stderr):
+            exit_code = app.main(
+                ["--input", "missing.csv", "--output", "result.xlsx"]
+            )
+
+        self.assertEqual(exit_code, 1)
+        self.assertIn("Conversione fallita", stderr.getvalue())
+
     def test_remove_selected_files_resets_output_when_list_becomes_empty(self) -> None:
         instance = app.DateConverterApp.__new__(app.DateConverterApp)
         instance.selected_files = [Path("first.csv")]
