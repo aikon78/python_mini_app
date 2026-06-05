@@ -1,4 +1,4 @@
-name: Build Windows EXE
+name: Build Windows Portable App
 
 on:
   workflow_dispatch:
@@ -22,18 +22,29 @@ jobs:
 
       - name: Install build dependency
         working-directory: source
-        run: python -m pip install --upgrade pip pyinstaller
+        run: python -m pip install --upgrade pip nuitka ordered-set zstandard
 
       - name: Run tests
         working-directory: source
         run: python -m unittest discover -s tests -p "test_*.py" -v
 
-      - name: Build standalone executable
+      - name: Build portable app folder
         working-directory: source
-        run: python -m PyInstaller --noconfirm --clean --onefile --windowed --name app app.py
+        run: >
+          python -m nuitka app.py
+          --standalone
+          --enable-plugin=tk-inter
+          --windows-console-mode=disable
+          --assume-yes-for-downloads
+          --output-filename=app.exe
 
-      - name: Upload executable artifact
+      - name: Create portable zip
+        working-directory: source
+        shell: pwsh
+        run: Compress-Archive -Path app.dist -DestinationPath python-mini-app-windows-portable.zip -Force
+
+      - name: Upload portable artifact
         uses: actions/upload-artifact@v4
         with:
-          name: python-mini-app-windows-exe
-          path: source/dist/app.exe
+          name: python-mini-app-windows-portable
+          path: source/python-mini-app-windows-portable.zip
