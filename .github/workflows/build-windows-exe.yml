@@ -48,7 +48,7 @@ jobs:
             "@echo off",
             "setlocal",
             "cd /d %~dp0",
-            "start \"\" pythonw.exe app.py"
+            'start "" pythonw.exe app.py'
           ) | Set-Content -Encoding ASCII "$portableDir/start_gui.bat"
 
           @(
