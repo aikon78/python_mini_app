@@ -10,6 +10,18 @@ un file Excel `.xlsx`.
 python app.py
 ```
 
+## CI con GitHub Actions
+
+Il repository esegue una pipeline CI automatica su GitHub Actions ad ogni push su
+`main` e su ogni pull request.
+
+La pipeline (`CI`) verifica il progetto su Python 3.11 e 3.12 ed esegue:
+
+- aggiornamento `pip`
+- test unitari (`python -m unittest discover -s tests -p "test_*.py" -v`)
+
+Puoi consultare l'esito nella scheda `Actions` del repository.
+
 ## App portable Windows (senza installazione)
 
 Si, puoi distribuire l'app senza installazione.
