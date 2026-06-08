@@ -1,4 +1,4 @@
-name: Build Windows Portable App
+name: buildalo
 
 on:
   workflow_dispatch:

@@ -24,7 +24,7 @@ Puoi consultare l'esito nella scheda `Actions` del repository.
 
 ## App Windows — distribuzione standalone (senza installazione)
 
-Il workflow `Build Windows Portable App` genera un archivio zip
+Il workflow `buildalo` genera un archivio zip
 `python-mini-app-windows.zip` con Python 3.12 embeddable + sorgenti dell'app.
 
 **Perché non viene bloccato dall'antivirus:**
@@ -41,7 +41,7 @@ Il workflow `Build Windows Portable App` genera un archivio zip
 
 1. Pubblica le modifiche su GitHub.
 2. Apri la scheda `Actions` del repository.
-3. Avvia il workflow `Build Windows Portable App`.
+3. Avvia il workflow `buildalo`.
 4. Al termine scarica `python-mini-app-windows`.
 
 ### Avvio su Windows
