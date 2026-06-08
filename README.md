@@ -22,20 +22,20 @@ La pipeline (`CI`) verifica il progetto su Python 3.11 e 3.12 ed esegue:
 
 Puoi consultare l'esito nella scheda `Actions` del repository.
 
-## App Windows — distribuzione standalone (senza installazione)
+## App Windows
 
 Il workflow `buildalo` genera un archivio zip
-`python-mini-app-windows.zip` con Python 3.12 embeddable + sorgenti dell'app.
+`python-mini-app-windows.zip` con i sorgenti dell'app e i launcher per Windows.
 
-**Perché non viene bloccato dall'antivirus:**
-- I binari Python (`python.exe`, `pythonw.exe`, DLL) provengono dal pacchetto
-  ufficiale python.org, firmato da Python Software Foundation — riconosciuti
-  come attendibili da Windows Defender e dai principali AV.
+**Requisito:** Python deve essere già installato sulla macchina Windows.
+
+**Perché resta semplice da distribuire:**
 - I file launcher (`avvia.pyw`, `start.bat`) sono **codice sorgente statico
   committato nel repository**, non generati a runtime — elimina il pattern
   "script genera script" che causa i falsi positivi.
 
-**Non richiede diritti di amministratore** né per la build né per l'esecuzione.
+**Non richiede diritti di amministratore** per la build. Per l'esecuzione basta
+un'installazione standard di Python già presente nel sistema.
 
 ### Come generare l'artefatto
 
@@ -48,7 +48,8 @@ Il workflow `buildalo` genera un archivio zip
 
 Estrai lo zip e fai doppio clic su **`start.bat`**.
 
-La finestra di console si chiude immediatamente; l'app GUI si apre in autonomia.
+Il launcher usa il Python installato nel sistema (`pyw`, `pythonw`, `py` o
+`python`, in quest'ordine) e apre l'app GUI.
 
 ## Funzioni principali
 

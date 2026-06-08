@@ -3,19 +3,6 @@ name: buildalo
 on:
   workflow_dispatch:
 
-# ---------------------------------------------------------------------------
-# Strategia: Python embeddable (python.org) + launcher statici committati
-#
-# I file avvia.pyw e start.bat sono committati nel repository (codice sorgente
-# statico visibile in git) — non vengono generati a runtime dal workflow.
-# Questo elimina il pattern "PowerShell genera script → esegue eseguibile"
-# che è la causa principale dei falsi positivi degli antivirus.
-#
-# I binari Python (python.exe, pythonw.exe, *.dll, *.pyd) provengono dal
-# pacchetto ufficiale python.org firmato da Python Software Foundation e
-# non richiedono diritti di amministratore per essere eseguiti.
-# ---------------------------------------------------------------------------
-
 jobs:
   build:
     runs-on: windows-latest
@@ -29,49 +16,25 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v6
         with:
-          python-version: '3.12'
+          python-version: '3.13'
 
       - name: Run tests
         run: python -m unittest discover -s tests -p "test_*.py" -v
 
-      - name: Create portable bundle
+      - name: Create Windows bundle
         shell: pwsh
         run: |
-          $embedUrl = "https://www.python.org/ftp/python/3.12.10/python-3.12.10-embed-amd64.zip"
-          $portableDir = "portable-app"
-          $pyHome    = $env:pythonLocation
-
-          # --- Python embeddable ---
-          Invoke-WebRequest -Uri $embedUrl -OutFile python-embed.zip
-          New-Item -ItemType Directory -Path $portableDir | Out-Null
-          Expand-Archive -Path python-embed.zip -DestinationPath $portableDir -Force
-
-          # --- Sorgenti app (inclusi i launcher già committati nel repo) ---
-          Copy-Item app.py       "$portableDir/"
-          Copy-Item converter.py "$portableDir/"
-          Copy-Item avvia.pyw    "$portableDir/"
-          Copy-Item start.bat    "$portableDir/"
-          Copy-Item README.md    "$portableDir/"
-
-          # --- _tkinter.pyd nella root (stessa dir di pythonw.exe = '.' in sys.path)
-          # --- tcl86t.dll e tk86t.dll nella root: Windows DLL loader le trova
-          # --- nella application directory quando carica le dipendenze di _tkinter.pyd
-          Copy-Item "$pyHome/DLLs/_tkinter.pyd" "$portableDir/"
-          Copy-Item "$pyHome/DLLs/tcl86t.dll"   "$portableDir/"
-          Copy-Item "$pyHome/DLLs/tk86t.dll"    "$portableDir/"
-
-          # --- Runtime Tcl/Tk e modulo Python tkinter (assente nell'embeddable) ---
-          Copy-Item "$pyHome/tcl"         "$portableDir/tcl" -Recurse
-          New-Item -ItemType Directory -Path "$portableDir/Lib" | Out-Null
-          Copy-Item "$pyHome/Lib/tkinter" "$portableDir/Lib/tkinter" -Recurse
-
-          # --- Aggiunge Lib al sys.path dell'embeddable (serve per import tkinter) ---
-          $pthFile = Get-ChildItem "$portableDir" -Filter "python*._pth" | Select-Object -First 1
-          Add-Content $pthFile.FullName "`nLib"
+          $bundleDir = "windows-app"
+          New-Item -ItemType Directory -Path $bundleDir | Out-Null
+          Copy-Item app.py       "$bundleDir/"
+          Copy-Item converter.py "$bundleDir/"
+          Copy-Item avvia.pyw    "$bundleDir/"
+          Copy-Item start.bat    "$bundleDir/"
+          Copy-Item README.md    "$bundleDir/"
 
       - name: Create zip artifact
         shell: pwsh
-        run: Compress-Archive -Path portable-app -DestinationPath python-mini-app-windows.zip -Force
+        run: Compress-Archive -Path windows-app -DestinationPath python-mini-app-windows.zip -Force
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
