@@ -53,19 +53,21 @@ jobs:
           Copy-Item start.bat    "$portableDir/"
           Copy-Item README.md    "$portableDir/"
 
-          # --- Tkinter: struttura directory standard Python ---
-          New-Item -ItemType Directory -Path "$portableDir/DLLs" | Out-Null
-          New-Item -ItemType Directory -Path "$portableDir/Lib"  | Out-Null
-
-          Copy-Item "$pyHome/DLLs/_tkinter.pyd" "$portableDir/DLLs/"
+          # --- _tkinter.pyd nella root (stessa dir di pythonw.exe = '.' in sys.path)
+          # --- tcl86t.dll e tk86t.dll nella root: Windows DLL loader le trova
+          # --- nella application directory quando carica le dipendenze di _tkinter.pyd
+          Copy-Item "$pyHome/DLLs/_tkinter.pyd" "$portableDir/"
           Copy-Item "$pyHome/DLLs/tcl86t.dll"   "$portableDir/"
           Copy-Item "$pyHome/DLLs/tk86t.dll"    "$portableDir/"
-          Copy-Item "$pyHome/tcl"                "$portableDir/tcl" -Recurse
-          Copy-Item "$pyHome/Lib/tkinter"        "$portableDir/Lib/tkinter" -Recurse
 
-          # --- Aggiunge DLLs e Lib al sys.path dell'embeddable ---
+          # --- Runtime Tcl/Tk e modulo Python tkinter (assente nell'embeddable) ---
+          Copy-Item "$pyHome/tcl"         "$portableDir/tcl" -Recurse
+          New-Item -ItemType Directory -Path "$portableDir/Lib" | Out-Null
+          Copy-Item "$pyHome/Lib/tkinter" "$portableDir/Lib/tkinter" -Recurse
+
+          # --- Aggiunge Lib al sys.path dell'embeddable (serve per import tkinter) ---
           $pthFile = Get-ChildItem "$portableDir" -Filter "python*._pth" | Select-Object -First 1
-          Add-Content $pthFile.FullName "`nDLLs`nLib"
+          Add-Content $pthFile.FullName "`nLib"
 
       - name: Create zip artifact
         shell: pwsh
