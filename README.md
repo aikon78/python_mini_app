@@ -22,48 +22,33 @@ La pipeline (`CI`) verifica il progetto su Python 3.11 e 3.12 ed esegue:
 
 Puoi consultare l'esito nella scheda `Actions` del repository.
 
-## App portable Windows (senza installazione)
+## App Windows — distribuzione standalone (senza installazione)
 
-Si, puoi distribuire l'app senza installazione.
+Il workflow `Build Windows Portable App` genera un archivio zip
+`python-mini-app-windows.zip` con Python 3.12 embeddable + sorgenti dell'app.
 
-In questo repository e presente un workflow GitHub Actions che genera una build
-portable Windows usando Python embeddable ufficiale (python.org) + script dell'app.
-Questa modalita evita exe compilati dal progetto ed e in genere meno soggetta a falsi
-positivi rispetto a PyInstaller/Nuitka.
+**Perché non viene bloccato dall'antivirus:**
+- I binari Python (`python.exe`, `pythonw.exe`, DLL) provengono dal pacchetto
+  ufficiale python.org, firmato da Python Software Foundation — riconosciuti
+  come attendibili da Windows Defender e dai principali AV.
+- I file launcher (`avvia.pyw`, `start.bat`) sono **codice sorgente statico
+  committato nel repository**, non generati a runtime — elimina il pattern
+  "script genera script" che causa i falsi positivi.
 
-### Come generarlo
+**Non richiede diritti di amministratore** né per la build né per l'esecuzione.
+
+### Come generare l'artefatto
 
 1. Pubblica le modifiche su GitHub.
 2. Apri la scheda `Actions` del repository.
 3. Avvia il workflow `Build Windows Portable App`.
-4. Al termine scarica l'artefatto `python-mini-app-windows-portable`.
+4. Al termine scarica `python-mini-app-windows`.
 
-L'archivio contiene la cartella `portable-app`: estraila e avvia:
+### Avvio su Windows
 
-- `start_gui.bat` per la GUI
-- `start_cli.bat` per l'uso da terminale
+Estrai lo zip e fai doppio clic su **`start.bat`**.
 
-Nota: `start_gui.bat` avvia la GUI e, se c'e un errore, mantiene aperta la finestra
-cosi puoi leggere il messaggio invece della chiusura immediata.
-
-### Build locale su Windows
-
-Se vuoi creare la build portable in locale su Windows, scarica il pacchetto
-embeddable ufficiale di Python 3.12 x64 e copia nella stessa cartella:
-
-- `app.py`
-- `converter.py`
-- un file batch launcher (come `start_gui.bat`)
-
-Esempio launcher GUI:
-
-```bash
-@echo off
-cd /d %~dp0
-start "" pythonw.exe app.py
-```
-
-Distribuisci la cartella completa in uno zip.
+La finestra di console si chiude immediatamente; l'app GUI si apre in autonomia.
 
 ## Funzioni principali
 

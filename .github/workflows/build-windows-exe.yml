@@ -3,6 +3,19 @@ name: Build Windows Portable App
 on:
   workflow_dispatch:
 
+# ---------------------------------------------------------------------------
+# Strategia: Python embeddable (python.org) + launcher statici committati
+#
+# I file avvia.pyw e start.bat sono committati nel repository (codice sorgente
+# statico visibile in git) — non vengono generati a runtime dal workflow.
+# Questo elimina il pattern "PowerShell genera script → esegue eseguibile"
+# che è la causa principale dei falsi positivi degli antivirus.
+#
+# I binari Python (python.exe, pythonw.exe, *.dll, *.pyd) provengono dal
+# pacchetto ufficiale python.org firmato da Python Software Foundation e
+# non richiedono diritti di amministratore per essere eseguiti.
+# ---------------------------------------------------------------------------
+
 jobs:
   build:
     runs-on: windows-latest
@@ -11,79 +24,55 @@ jobs:
 
     steps:
       - name: Checkout repository
-        shell: pwsh
-        run: |
-          git clone --depth 1 https://github.com/${{ github.repository }} source
+        uses: actions/checkout@v4
 
       - name: Set up Python
         uses: actions/setup-python@v6
         with:
           python-version: '3.12'
 
-      - name: Install build dependency
-        working-directory: source
-        run: python -m pip install --upgrade pip
-
       - name: Run tests
-        working-directory: source
         run: python -m unittest discover -s tests -p "test_*.py" -v
 
-      - name: Create portable bundle with embeddable Python
-        working-directory: source
+      - name: Create portable bundle
         shell: pwsh
         run: |
           $embedUrl = "https://www.python.org/ftp/python/3.12.10/python-3.12.10-embed-amd64.zip"
-          $embedZip = "python-embed.zip"
           $portableDir = "portable-app"
-          $pyHome = $env:pythonLocation
+          $pyHome    = $env:pythonLocation
 
-          Invoke-WebRequest -Uri $embedUrl -OutFile $embedZip
+          # --- Python embeddable ---
+          Invoke-WebRequest -Uri $embedUrl -OutFile python-embed.zip
           New-Item -ItemType Directory -Path $portableDir | Out-Null
-          Expand-Archive -Path $embedZip -DestinationPath $portableDir -Force
+          Expand-Archive -Path python-embed.zip -DestinationPath $portableDir -Force
 
-          Copy-Item app.py "$portableDir/app.py"
-          Copy-Item converter.py "$portableDir/converter.py"
-          Copy-Item README.md "$portableDir/README.md"
+          # --- Sorgenti app (inclusi i launcher già committati nel repo) ---
+          Copy-Item app.py       "$portableDir/"
+          Copy-Item converter.py "$portableDir/"
+          Copy-Item avvia.pyw    "$portableDir/"
+          Copy-Item start.bat    "$portableDir/"
+          Copy-Item README.md    "$portableDir/"
 
-          # Tkinter needs _tkinter extension and Tcl/Tk runtime folders.
-          Copy-Item "$pyHome/DLLs/_tkinter.pyd" "$portableDir/_tkinter.pyd"
-          Copy-Item "$pyHome/DLLs/tcl86t.dll" "$portableDir/tcl86t.dll"
-          Copy-Item "$pyHome/DLLs/tk86t.dll" "$portableDir/tk86t.dll"
-          Copy-Item "$pyHome/tcl" "$portableDir/tcl" -Recurse
+          # --- Tkinter: struttura directory standard Python ---
+          New-Item -ItemType Directory -Path "$portableDir/DLLs" | Out-Null
+          New-Item -ItemType Directory -Path "$portableDir/Lib"  | Out-Null
 
-          @'
-          @echo off
-          setlocal
-          cd /d %~dp0
-          set "TCL_LIBRARY=%~dp0tcl\tcl8.6"
-          set "TK_LIBRARY=%~dp0tcl\tk8.6"
-          python.exe app.py
-          if errorlevel 1 (
-            echo.
-            echo Errore durante l'avvio GUI. Premi un tasto per chiudere.
-            pause >nul
-          )
-          '@ | Set-Content -Encoding ASCII "$portableDir/start_gui.bat"
+          Copy-Item "$pyHome/DLLs/_tkinter.pyd" "$portableDir/DLLs/"
+          Copy-Item "$pyHome/DLLs/tcl86t.dll"   "$portableDir/"
+          Copy-Item "$pyHome/DLLs/tk86t.dll"    "$portableDir/"
+          Copy-Item "$pyHome/tcl"                "$portableDir/tcl" -Recurse
+          Copy-Item "$pyHome/Lib/tkinter"        "$portableDir/Lib/tkinter" -Recurse
 
-          @'
-          @echo off
-          setlocal
-          cd /d %~dp0
-          set "TCL_LIBRARY=%~dp0tcl\tcl8.6"
-          set "TK_LIBRARY=%~dp0tcl\tk8.6"
-          python.exe app.py --help
-          echo.
-          echo Esempio:
-          echo python.exe app.py --input file1.csv file2.txt --output risultato.xlsx
-          '@ | Set-Content -Encoding ASCII "$portableDir/start_cli.bat"
+          # --- Aggiunge DLLs e Lib al sys.path dell'embeddable ---
+          $pthFile = Get-ChildItem "$portableDir" -Filter "python*._pth" | Select-Object -First 1
+          Add-Content $pthFile.FullName "`nDLLs`nLib"
 
-      - name: Create portable zip
-        working-directory: source
+      - name: Create zip artifact
         shell: pwsh
-        run: Compress-Archive -Path portable-app -DestinationPath python-mini-app-windows-portable.zip -Force
+        run: Compress-Archive -Path portable-app -DestinationPath python-mini-app-windows.zip -Force
 
-      - name: Upload portable artifact
+      - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: python-mini-app-windows-portable
-          path: source/python-mini-app-windows-portable.zip
+          name: python-mini-app-windows
+          path: python-mini-app-windows.zip
